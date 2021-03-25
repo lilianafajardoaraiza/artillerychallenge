@@ -1,0 +1,61 @@
+
+    config:
+      target: "https://api.todoist.com"
+      processor: "fakerScript/my-faker.js"
+      phases:
+        - duration: 1
+          arrivalRate: 3
+          name: "Phase 1"
+      defaults:
+        headers:
+          Authorization: Bearer {{ $processEnvironment.TOKEN }}
+          Content-type: application/json
+    scenarios:
+      - flow:
+          - function: "generateRandomData"
+
+          
+           #1- get active tasks:   
+          - get:
+              url: "/rest/v1/tasks"
+
+           #2- creating new tasks:       
+          - post:
+              url: "/rest/v1/tasks"
+              json:
+               content: "{{ name }}"
+              capture:
+               json: "$.id"
+               as: "TaskCreated"
+          - log: "creating new tasks"     
+          - log: "current id is: {{ TaskCreated }}"
+          - log: "faker: {{ name }}"
+
+          #3- get an active task:
+          - get:
+              url: "/rest/v1/tasks/{{TaskCreated}}"
+
+          #4- update a task:    
+          - post:
+              url: "/rest/v1/tasks/{{TaskCreated}}"
+              json:
+               content: "artillery updated"
+
+          #5- close a task:     
+          - post:
+              url: "/rest/v1/tasks/{{TaskCreated}}/close"
+          #6- reopen a task:    
+          - post:
+              url: "/rest/v1/tasks/{{TaskCreated}}/reopen"
+
+          #7- delete a task:          
+          - delete:
+              url: "/rest/v1/tasks/{{TaskCreated}}"
+               
+
+         
+              
+          
+    # For more information: https://artillery.io/docs/script-reference/
+      #processor: "./myProcessor.js"
+    # For more information: https://artillery.io/docs/script-reference/
